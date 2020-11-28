@@ -40,7 +40,7 @@ class CreepStack(QRunnable):
     def wait_for_stack(self):
         while True:
             time.sleep(0.2)
-            if wf.find_img_in_window(self.hon_window.clock_screenshot(), self.creep_timer_image).x > 0:
+            if wf.find_img_in_window(self.hon_window.screenshot(self.hon_window.clock), self.creep_timer_image).x > 0:
                 print('time to stack')
                 break
         return None

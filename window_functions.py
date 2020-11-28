@@ -3,10 +3,13 @@ import sys
 import win32gui
 import ctypes
 from PIL import Image
+import PIL.ImageOps
 import mss
 import BoundingBox as bb
 import time
 from config import regions_of_interest as roi
+import pytesseract
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files (x86)\Tesseract-OCR\tesseract.exe'
 
 
 class HonWindow:
@@ -14,38 +17,38 @@ class HonWindow:
         self.bounding_box = bb.BoundingBox(coords, mode='corners')
         # get screenshotter
         self.handle = handle
+        self.hero = None
         self.sct = mss.mss()
-        minimap = roi.screen_size_1600x1024['minimap']
-        self.minimap_bounding_box = bb.BoundingBox([self.bounding_box.x + minimap.x,
-                                                   self.bounding_box.y + minimap.y,
-                                                   minimap.width,
-                                                   minimap.height], mode='relative')
+        self.minimap = roi.screen_size_1600x1024['minimap']
+        self.clock = roi.screen_size_1600x1024['in_game_clock']
 
-        clock = roi.screen_size_1600x1024['in_game_clock']
-        self.clock_bounding_box = bb.BoundingBox([self.bounding_box.x + clock.x,
-                                                   self.bounding_box.y + clock.y,
-                                                   clock.width,
-                                                   clock.height], mode='relative')
+    def print_game_time_to_console(self, sleep_time=0.1):
+        self.set_foreground()
+        time.sleep(sleep_time)
+        pyautogui.hotkey('ctrl', 'f8')
+        time.sleep(sleep_time)
+        pyautogui.write('printserverstatus')
+        time.sleep(sleep_time)
+        pyautogui.press('enter')
+        time.sleep(sleep_time)
+        pyautogui.write('flushlogs')
+        time.sleep(sleep_time)
+        pyautogui.press('enter')
+        time.sleep(sleep_time)
+        pyautogui.hotkey('ctrl', 'f8')
+
 
     def set_foreground(self):
         win32gui.SetForegroundWindow(self.handle)
 
-    def screenshot(self):
-        screenshot = self.sct.grab(self.bounding_box.as_dict())
+    def screenshot(self, subregion=None, save_output=False):
+        if subregion:
+            screenshot = self.sct.grab(subregion.from_outside_box(self.bounding_box).as_dict())
+        else:
+            screenshot = self.sct.grab(self.bounding_box.as_dict())
         img = Image.frombytes("RGB", screenshot.size, screenshot.bgra, "raw", "BGRX")
-        img.save('test.png')
-        return img
-
-    def minimap_screenshot(self):
-        screenshot = self.sct.grab(self.minimap_bounding_box.as_dict())
-        img = Image.frombytes("RGB", screenshot.size, screenshot.bgra, "raw", "BGRX")
-        img.save('minimap_test.png')
-        return img
-
-    def clock_screenshot(self):
-        screenshot = self.sct.grab(self.clock_bounding_box.as_dict())
-        img = Image.frombytes("RGB", screenshot.size, screenshot.bgra, "raw", "BGRX")
-        img.save('clock_test.png')
+        if save_output:
+            img.save('test1.png')
         return img
 
     def quadrant_screenshot(self, quadrant):
@@ -60,17 +63,35 @@ class HonWindow:
         y = point.y + self.bounding_box.y
         pyautogui.rightClick(x, y)
 
-    def locate_hero(self):
+    def shift_right_click(self, point):
+        self.set_foreground()
+        x = point.x + self.bounding_box.x
+        y = point.y + self.bounding_box.y
+        pyautogui.keyDown('shift')
+        time.sleep(0.01)
+        pyautogui.rightClick(x, y)
+        time.sleep(0.01)
+        pyautogui.keyUp('shift')
+
+    def locate_hero(self, img_path='img/ws_minimap_icon_2.png'):
         """
         Finds hero on the minimap by image search.
         :return: bounding box of hero location in window-relative coordinates
         """
-        hero_minimap_location = find_img_in_window(self.minimap_screenshot(), 'img/ws_minimap_icon_2.png')
+        hero_minimap_location = find_img_in_window(self.screenshot(self.minimap), img_path)
 
-        return bb.BoundingBox([hero_minimap_location.x + self.minimap_bounding_box.x - self.bounding_box.x,
-                               hero_minimap_location.y + self.minimap_bounding_box.y - self.bounding_box.y,
+        return bb.BoundingBox([hero_minimap_location.x + self.minimap.x,
+                               hero_minimap_location.y + self.minimap.y,
                                hero_minimap_location.width,
                                hero_minimap_location.height], mode='relative')
+
+    def get_hero_name(self):
+        img = self.screenshot(subregion=roi.screen_size_1600x1024['hero_name'])
+        img.save('test123.png')
+        return pytesseract.image_to_string(img, config='--psm 13')
+
+    def clock_image(self):
+        return self.screenshot(self.clock)
 
 
 # need simple xgb model to parse time
@@ -86,6 +107,7 @@ def init_hon_windows():
 
 def find_img_in_window(screenshot, img):
     img_location = pyautogui.locate(img, screenshot)
+    print(img_location)
     if img_location is None:
         return bb.BoundingBox([-1, -1, 0, 0], mode='relative')
     # need to just get the overlay, not the actual game clock
@@ -124,11 +146,10 @@ def get_window_handles(name='Heroes of Newerth'):
 if __name__ == '__main__':
     handles = get_window_handles(name='Heroes of Newerth')
     hon_windows = init_hon_windows()
-    time_img = Image.open('img/creep_pull_time.png')
-    clock_location = find_img_in_window(hon_windows[0].clock_screenshot(), time_img)
-    # print(clock_location)
-    # print(clock_location)
-    # print(hon_windows[0].bounding_box.as_dict())
-    hon_windows[0].quadrant_screenshot('bottom_left')
-    print(hon_windows[0].locate_hero().as_dict())
-    # print(hon_windows[0].clock_screenshot().as_dict())
+    hero_name_image = Image.open('img/hero_name_sample.png')
+    hero_name_location = find_img_in_window(hon_windows[0].screenshot(), hero_name_image)
+    print(hero_name_location.as_dict())
+    test = hon_windows[0].screenshot(subregion=roi.screen_size_1600x1024['hero_name'], save_output=True)
+
+    print(hon_windows[0].get_hero_name())
+
