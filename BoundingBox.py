@@ -28,6 +28,18 @@ class BoundingBox:
         else:
             raise ValueError('Invalid quadrant specified')
 
+    def from_outside_box(self, bounding_box):
+        """
+        Translate from relative to global coordinates using enclosing bounding box
+        :param bounding_box: Enclosing bounding box
+        :return: Bounding box in global coordinates
+        """
+        return BoundingBox([self.x + bounding_box.x,
+                           self.y + bounding_box.y,
+                           self.width,
+                           self.height],
+                           mode='relative')
+
 
 class Point:
     def __init__(self, x, y):
