@@ -11,6 +11,7 @@ class ResultObj(QObject):
 
 
 class Signals(QObject):
+    running = pyqtSignal()
     progress = pyqtSignal(object)
 
 
@@ -40,11 +41,11 @@ class GameTimeChecker(QRunnable):
 
 class GameTimeClock(QRunnable):
 
-    def __init__(self, log_listener, fn, hon_window: HonWindow):
+    def __init__(self, log_listener, progress_fn, running_fn, hon_window: HonWindow):
         super().__init__()
-        self.fn = fn
         self.signals = Signals()
-        self.signals.progress.connect(fn)
+        self.signals.progress.connect(progress_fn)
+        self.signals.running.connect(running_fn)
         self.log_listener = log_listener
         self.hon_window = hon_window
 
@@ -53,6 +54,7 @@ class GameTimeClock(QRunnable):
         if self.log_listener.game_start_time is None:
             self.hon_window.print_game_time_to_console()
             self.log_listener.check_for_logs()
+            self.signals.running.emit()
         while True:
             result = ResultObj(self.log_listener.check_game_time())
             self.signals.progress.emit(result)

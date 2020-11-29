@@ -38,8 +38,10 @@ class HonMacroController(QMainWindow):
 
         self.window_frames = []
         self.threadpool = QThreadPool()
+        self.clockThread = QThreadPool()
         self.initUI()
         self.show()
+        self.is_clock_running = False
 
         print(self.findChild(QFrame, 'frame1'))
 
@@ -102,8 +104,14 @@ class HonMacroController(QMainWindow):
 
     @pyqtSlot()
     def start_clock(self):
-        game_time_clock = GameTimeClock(self.log_listener, self.update_game_time, self.hon_windows[0])
-        self.threadpool.start(game_time_clock)
+        if not self.is_clock_running:
+            game_time_clock = GameTimeClock(self.log_listener, self.update_game_time, self.set_clock_running, self.hon_windows[0])
+            self.threadpool.start(game_time_clock)
+        else:
+            print('Clock already started')
+
+    def set_clock_running(self):
+        self.is_clock_running = True
 
     @pyqtSlot()
     def re_initialize_hon_windows(self):
