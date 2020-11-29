@@ -2,6 +2,21 @@ import os
 import time
 from datetime import datetime, timedelta
 
+class GameTime:
+    def __init__(self, hours, minutes, seconds):
+        self.hours = hours
+        self.minutes = minutes
+        self.seconds = seconds
+
+    def format_time(self):
+        if self.minutes < 10:
+            self.minutes = f"0{self.minutes}"
+        if self.seconds < 10:
+            self.seconds = f"0{self.seconds}"
+        if self.hours < 10:
+            self.hours = f"0{self.hours}"
+        return f"{self.hours}:{self.minutes}:{self.seconds}"
+
 class LogListener:
     def __init__(self, log_path="C:/Users/asdasdasd/Documents/Heroes of Newerth/game"):
         filepath = os.path.join(log_path, "console.log")
@@ -33,4 +48,13 @@ class LogListener:
         )
 
     def check_game_time(self):
-        return datetime.now() - self.game_start_time
+        td = datetime.now() - self.game_start_time
+        hours = td.seconds//3600
+        minutes = (td.seconds//60)%60
+        seconds = td.seconds%60
+
+        return GameTime(hours, minutes, seconds)
+
+
+if __name__=="__main__":
+    print(GameTime(1,2,3).format_time())
