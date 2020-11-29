@@ -60,17 +60,3 @@ class GameTimeClock(QRunnable):
             self.signals.progress.emit(result)
             time.sleep(1)
 
-
-
-
-if __name__=="__main__":
-
-    w = init_hon_windows()
-
-    app = QCoreApplication(sys.argv)
-    hello = GameTimeChecker(execute_this_fn, w[0])
-    hello.signals.finished.connect(check)
-
-    QThreadPool.globalInstance().start(hello)
-    sys.exit(app.exec_())
-
