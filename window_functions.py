@@ -63,6 +63,12 @@ class HonWindow:
         y = point.y + self.bounding_box.y
         pyautogui.rightClick(x, y)
 
+    def left_click(self, point):
+        self.set_foreground()
+        x = point.x + self.bounding_box.x
+        y = point.y + self.bounding_box.y
+        pyautogui.leftClick(x, y)
+
     def shift_right_click(self, point):
         self.set_foreground()
         x = point.x + self.bounding_box.x

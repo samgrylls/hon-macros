@@ -67,11 +67,49 @@ def check_arrival(point):
 def select_hero():
     pyautogui.hotkey('f1')
 
+
+def spawn_and_group_wolves():
+    pyautogui.hotkey()
+
+
+def init_warbeast():
+    # level up wolves
+    # could also level up with a hotkey, idk
+    hon_window.left_click(bb.Point(731, 884))
+    time.sleep(0.1)
+    pyautogui.hotkey('q')11
+    time.sleep(0.5)
+    # group them
+    # select all non-hero units
+    pyautogui.hotkey('f3')
+    time.sleep(0.1)
+    # wolf 1 portrait location
+    hon_window.left_click(bb.Point(1393, 927))
+    time.sleep(0.05)
+    hon_window.left_click(bb.Point(1393, 927))
+    # return
+    time.sleep(0.1)
+    pyautogui.hotkey('ctrl', '1')
+    time.sleep(0.1)
+
+    pyautogui.hotkey('f3')
+    time.sleep(0.1)
+    # wolf 2
+    hon_window.left_click(bb.Point(1439, 927))
+    time.sleep(0.05)
+    hon_window.left_click(bb.Point(1439, 927))
+    pyautogui.hotkey('ctrl', '2')
+
+
+
+
+
+
 if __name__=="__main__":
     hon_windows = window_functions.init_hon_windows()
     hon_window = hon_windows[0]
 
     hon_window.set_foreground()
 
-    print(check_arrival(hero_location))
+    init_warbeast()
 
