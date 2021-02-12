@@ -14,14 +14,7 @@ from config import regions_of_interest as roi
 
 from CreepStacker import DoubleCreepStack
 
-
-class HonWindowFrame(HonWindow):
-    def __init__(self, xPosition):
-        self.xPosition = xPosition
-        self.title = None
-        self.push_button = None
-        self.action_dropdown = None
-        self.condition_dropdown = None
+HEROES = ['Wildsoul', 'War Beast', 'Ophelia']
 
 
 class HonMacroController(QMainWindow):
@@ -45,18 +38,53 @@ class HonMacroController(QMainWindow):
 
         print(self.findChild(QFrame, 'frame1'))
 
-    def init_window_frame(self, honWindowFrame):
-        honWindowFrame.title = QLabel("No hero", self)
-        honWindowFrame.title.move(honWindowFrame.xPosition, 10)
-        honWindowFrame.push_button = QPushButton("Run task", self)
-        honWindowFrame.push_button.move(honWindowFrame.xPosition, 50)
-        honWindowFrame.action_dropdown = QComboBox(self)
-        honWindowFrame.action_dropdown.move(honWindowFrame.xPosition, 100)
-        honWindowFrame.condition_dropdown = QComboBox(self)
-        honWindowFrame.condition_dropdown.move(honWindowFrame.xPosition, 150)
+    # def init_window_frame(self, honWindowFrame):
+    #     honWindowFrame.title = QLabel("No hero", self)
+    #     honWindowFrame.title.move(honWindowFrame.xPosition, 10)
+    #     honWindowFrame.push_button = QPushButton("Run task", self)
+    #     honWindowFrame.push_button.move(honWindowFrame.xPosition, 50)
+    #     honWindowFrame.action_dropdown = QComboBox(self)
+    #     honWindowFrame.action_dropdown.move(honWindowFrame.xPosition, 100)
+    #     honWindowFrame.condition_dropdown = QComboBox(self)
+    #     honWindowFrame.condition_dropdown.move(honWindowFrame.xPosition, 150)
+
+    @pyqtSlot()
+    def choose_hero(self, text):
+        idx = self.dropdowns.index(self.sender())
+        self.labels[idx].setText(f"Window {idx} hero: {text}")
+        self.hon_windows[idx].hero = text
+
+    @pyqtSlot()
+    def show_window(self):
+        idx = self.buttons.index(self.sender())
+        self.hon_windows[idx].set_foreground()
 
     def initUI(self):
         print(len(self.hon_windows))
+
+        bottom_offset = 150
+        self.buttons = []
+        self.labels = []
+        self.dropdowns = []
+        for idx, val in enumerate(self.hon_windows):
+            label = QLabel(self)
+            label.setText(f"Window {idx}: {val.hero}")
+            label.move(30, bottom_offset)
+            label.show()
+            self.labels.append(label)
+
+            show_window_button = QPushButton("show", self)
+            show_window_button.move(270, bottom_offset)
+            show_window_button.clicked.connect(self.show_window)
+            self.buttons.append(show_window_button)
+
+            dropdown = QComboBox(self)
+            dropdown.addItems(HEROES)
+            dropdown.move(150, bottom_offset)
+            dropdown.currentTextChanged.connect(lambda text: self.choose_hero(text))
+            self.dropdowns.append(dropdown)
+            
+            bottom_offset += 50
 
         self.log_listener = LogListener()
         self.game_time = QLabel("Game time", self)
@@ -64,17 +92,18 @@ class HonMacroController(QMainWindow):
         self.game_time.setText("123")
         self.game_time.show()
 
+
         btn1 = QPushButton("stack easy legion creep", self)
         btn1.move(30, 50)
 
         btn2 = QPushButton("start clock", self)
-        btn2.move(200, 50)
+        btn2.move(150, 50)
 
         btn3 = QPushButton("reset hon windows", self)
-        btn3.move(30, 150)
+        btn3.move(30, 100)
 
         btn4 = QPushButton("reset game time", self)
-        btn4.move(200, 150)
+        btn4.move(150, 100)
 
         btn1.clicked.connect(lambda: self.stack_easy_legion_creep(self.hon_windows[0]))
         btn2.clicked.connect(self.start_clock)
