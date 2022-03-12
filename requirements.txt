@@ -1,4 +1,4 @@
 PyAutoGUI==0.9.48
-Pillow==5.4.1
+Pillow==9.0.1
 mss==5.0.0
 pywin32==223
